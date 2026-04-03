@@ -17,16 +17,26 @@ def invoke_wgp(zip_path: str, stage_name: str):
     """Executes wgp.py locally to process the generated zip payload."""
     print(f"\n[>>>] Triggering GPU engine for: {stage_name}")
     print(f"      Running: python wgp.py --process {zip_path}")
+    
+    # We must properly format the absolute path for the zip payload so wan2flux can find it
+    abs_zip_path = os.path.abspath(zip_path)
+    
     try:
-        # Assuming orchestrator.py is in the same folder as wgp.py (e.g. inside Google Colab)
-        result = subprocess.run(["python", "wgp.py", "--process", zip_path], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Run wgp.py exclusively from within its directory so its dependencies resolve
+        result = subprocess.run(
+            ["python", "wgp.py", "--process", abs_zip_path], 
+            cwd=WAN2FLUX_DIR,
+            check=False, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE
+        )
         if result.returncode == 0:
             print(f"[OK] Completed {stage_name} successfully!")
         else:
-            print(f"[WARN] Command ran but returned non-zero code. If 'wgp.py' is missing, this is expected on a non-Colab PC.")
+            print(f"[WARN] Command ran but returned non-zero code. Output might hold errors.")
         return True
     except FileNotFoundError:
-        print(f"[FAIL] Could not find 'python' or 'wgp.py'. If this is your local PC, no problem. On Colab, make sure both exist.")
+        print(f"[FAIL] Could not find 'python' or 'wgp.py' inside {WAN2FLUX_DIR}.")
         return False
 
 # We create directories if they don't exist
