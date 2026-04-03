@@ -4,10 +4,12 @@ import json
 import time
 import zipfile
 import subprocess
+import subprocess
 import requests
 from typing import List, Dict
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+# Use 127.0.0.1 to avoid IPv6/proxy loops on Colab/Windows
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 MODEL_NAME = "kimi-k2.5:cloud"  # The model you specified
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
@@ -52,7 +54,8 @@ def generate_via_ollama(prompt: str) -> str:
     }
     print(f"[*] Calling Ollama ({MODEL_NAME})...")
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+        # We explicitly block proxies to prevent Colab/VPNs from trying to authenticate local traffic
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120, proxies={"http": None, "https": None})
         response.raise_for_status()
         return response.json().get("response", "").strip()
     except Exception as e:
