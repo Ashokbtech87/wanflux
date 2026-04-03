@@ -1,0 +1,324 @@
+#!/usr/bin/env python3
+"""
+Viral YouTube SEO Optimizer - OPTIMIZED VERSION
+Generates metadata designed for maximum virality and millions of views
+Optimized for speed with local models and timeout handling
+"""
+
+import re
+import time
+from datetime import datetime
+from ollama import chat
+
+class ViralSEOOptimizer:
+    """Optimize metadata for viral reach and millions of views - FAST VERSION"""
+    
+    # Fast local models (avoid slow cloud models)
+    FAST_MODELS = ['llama3.2', 'mistral', 'qwen2.5']
+    DEFAULT_MODEL = 'llama3.2'  # Much faster than cloud models
+    
+    # Viral power words for maximum CTR
+    VIRAL_POWER_WORDS = [
+        "Shocking", "Unbelievable", "Mind-Blowing", "Insane", "Crazy",
+        "Secret", "Hidden", "Revealed", "Exposed", "Truth",
+        "Ultimate", "Best", "Worst", "Most", "Top", "Exclusive",
+        "Instant", "Immediate", "Fast", "Quick", "Now", "Urgent",
+        "Free", "Giveaway", "Bonus", "Limited", "Proven", "Guaranteed",
+        "Viral", "Trending", "Breaking", "Must-Watch", "Epic", "Legendary"
+    ]
+    
+    # Emotional trigger words
+    EMOTIONAL_TRIGGERS = {
+        "fear": ["Don't", "Stop", "Warning", "Danger", "Mistake", "Avoid"],
+        "curiosity": ["What", "How", "Why", "Secret", "Hidden", "Unknown"],
+        "anger": ["Unacceptable", "Outrageous", "Disgusting", "Shocking"],
+        "joy": ["Amazing", "Incredible", "Wonderful", "Best", "Perfect"],
+        "surprise": ["Unexpected", "Surprising", "You Won't Believe", "OMG"],
+        "awe": ["Mind-Blowing", "Breathtaking", "Stunning", "Spectacular"]
+    }
+    
+    @staticmethod
+    def generate_viral_metadata_batch(topic, content_analysis, keywords, search_data, video_duration, 
+                                     model='llama3.2', timeout=60, progress_callback=None):
+        """
+        Generate ALL viral metadata in ONE call (much faster than separate calls)
+        Returns: titles, description, hashtags, keywords
+        """
+        if progress_callback:
+            progress_callback("Generating viral metadata (titles + description + hashtags)...")
+        
+        prompt = f"""Generate VIRAL YouTube metadata for this video:
+
+TOPIC: "{topic}"
+CONTENT ANALYSIS: {content_analysis}
+SEO KEYWORDS: {', '.join(keywords[:10]) if keywords else 'viral, trending, 2026'}
+COMPETITOR DATA: {search_data if search_data else 'Top videos get millions of views'}
+VIDEO DURATION: {video_duration:.1f} seconds
+
+Generate EXACTLY this format:
+
+=== TITLES (10 options) ===
+1. [First viral title with power word]
+2. [Second viral title]
+...
+10. [Tenth viral title]
+RECOMMENDED: [Best title from above]
+
+=== DESCRIPTION ===
+[Hook - 2 lines with power words and emojis]
+
+[Body with timestamps and SEO content]
+
+[CTA section with subscribe, like, share]
+
+=== HASHTAGS ===
+#viral #trending #[Topic]Viral #2026 #MustWatch [15-20 more hashtags]
+
+=== KEYWORDS ===
+keyword1, keyword2, keyword3, [12-15 more keywords]
+
+Requirements:
+- Titles: Use power words (Shocking, Secret, Ultimate, Viral), numbers (3,5,7), emojis
+- Description: Hook in first 60 chars, include main keyword, 2-3 emojis
+- Hashtags: 20-25 total, mix of viral + topic-specific + engagement tags
+- Keywords: 15-20 high-volume SEO keywords
+- ALL content optimized for MILLIONS of views"""
+
+        try:
+            start_time = time.time()
+            
+            response = chat(
+                model=model,
+                messages=[{'role': 'user', 'content': prompt}],
+                options={'timeout': timeout}
+            )
+            
+            elapsed = time.time() - start_time
+            if progress_callback:
+                progress_callback(f"Metadata generated in {elapsed:.1f} seconds")
+            
+            return ViralSEOOptimizer.parse_batch_response(response.message.content)
+            
+        except Exception as e:
+            if progress_callback:
+                progress_callback(f"Error: {str(e)}. Using fallback...")
+            # Fallback to template-based generation (instant, no API call)
+            return ViralSEOOptimizer.generate_fallback_metadata(topic, content_analysis, keywords)
+    
+    @staticmethod
+    def parse_batch_response(content):
+        """Parse the batch response into structured metadata"""
+        metadata = {
+            'titles': '',
+            'description': '',
+            'hashtags': [],
+            'keywords': [],
+            'recommended_title': ''
+        }
+        
+        # Extract titles section
+        titles_match = re.search(r'===\s*TITLES.*?===(.*?)===', content, re.DOTALL | re.IGNORECASE)
+        if titles_match:
+            metadata['titles'] = titles_match.group(1).strip()
+            # Extract recommended title
+            rec_match = re.search(r'RECOMMENDED:\s*(.+)', metadata['titles'], re.IGNORECASE)
+            if rec_match:
+                metadata['recommended_title'] = rec_match.group(1).strip()
+        
+        # Extract description
+        desc_match = re.search(r'===\s*DESCRIPTION.*?===(.*?)===', content, re.DOTALL | re.IGNORECASE)
+        if desc_match:
+            metadata['description'] = desc_match.group(1).strip()
+        
+        # Extract hashtags
+        hash_match = re.search(r'===\s*HASHTAGS.*?===(.+?)(?:===|$)', content, re.DOTALL | re.IGNORECASE)
+        if hash_match:
+            hashtags_text = hash_match.group(1).strip()
+            metadata['hashtags'] = [tag.strip() for tag in hashtags_text.split() if tag.startswith('#')][:25]
+        
+        # Extract keywords
+        kw_match = re.search(r'===\s*KEYWORDS.*?===(.+?)(?:===|$)', content, re.DOTALL | re.IGNORECASE)
+        if kw_match:
+            keywords_text = kw_match.group(1).strip()
+            metadata['keywords'] = [kw.strip() for kw in keywords_text.split(',') if kw.strip()][:20]
+        
+        return metadata
+    
+    @staticmethod
+    def generate_fallback_metadata(topic, content_analysis, keywords):
+        """Generate metadata without API call (instant fallback)"""
+        # Generate titles using templates
+        power_words = ["Shocking", "Secret", "Ultimate", "Viral", "Mind-Blowing"]
+        numbers = [3, 5, 7, 10]
+        
+        titles = []
+        for i, (pw, num) in enumerate(zip(power_words, numbers)):
+            titles.append(f"{i+1}. {pw} {topic} That Will Change Everything! 🔥")
+        
+        titles.append(f"RECOMMENDED: {power_words[0]} {topic} That Will Change Everything! 🔥")
+        
+        # Generate description
+        description = f"""🔥 WELCOME TO THE MOST {power_words[0].upper()} {topic.upper()} VIDEO! 
+
+This {topic} content will blow your mind! Watch till the end!
+
+⏱️ TIMESTAMPS:
+00:00 - Intro
+00:30 - Main Content
+02:00 - Key Secrets Revealed
+05:00 - Pro Tips
+
+✨ WHAT YOU'LL LEARN:
+• Secret techniques nobody talks about
+• How to go viral with {topic}
+• Proven strategies for millions of views
+
+🎯 SUBSCRIBE NOW for more viral content!
+👍 LIKE if this helped you!
+💬 COMMENT your thoughts below!
+📤 SHARE with friends!
+
+#viral #trending #{topic.replace(' ', '')}Viral"""
+        
+        # Generate hashtags
+        hashtags = [
+            "#viral", "#trending", "#fyp", "#foryou", "#youtube",
+            f"#{topic.replace(' ', '')}Viral", f"#{topic.replace(' ', '')}Trending",
+            "#2026", "#MustWatch", "#Subscribe", "#ViralVideo"
+        ]
+        
+        # Generate keywords
+        all_keywords = [
+            f"viral {topic}", f"trending {topic}", f"{topic} 2026",
+            f"best {topic}", f"{topic} tutorial", f"{topic} secrets",
+            "viral video", "trending now", "2026 trends"
+        ]
+        if keywords:
+            all_keywords.extend(keywords[:10])
+        
+        return {
+            'titles': '\n'.join(titles),
+            'description': description,
+            'hashtags': hashtags[:25],
+            'keywords': list(set(all_keywords))[:20],
+            'recommended_title': titles[0].replace('1. ', '')
+        }
+    
+    @staticmethod
+    def extract_viral_keywords(description, topic, search_results):
+        """Extract and optimize viral keywords (fast, no API call)"""
+        # Primary high-volume keywords
+        primary = [
+            f"trending {topic}", f"viral {topic}", f"{topic} 2026",
+            f"best {topic}", f"{topic} compilation", f"{topic} reaction",
+            f"{topic} tutorial", f"{topic} tips", f"{topic} secrets", f"{topic} exposed"
+        ]
+        
+        # Long-tail keywords
+        secondary = [
+            f"how to {topic} viral", f"{topic} for beginners", f"{topic} explained",
+            f"{topic} breakdown", f"{topic} analysis", f"{topic} review",
+            f"{topic} demo", f"{topic} transformation", f"{topic} 2026 trends"
+        ]
+        
+        # Trending keywords
+        trending = [
+            "2026 trends", "viral 2026", "trending now", "breaking news",
+            "latest update", "new discovery", "hot topic", "must watch", "viral video"
+        ]
+        
+        # Extract from search results
+        competitor_keywords = []
+        if search_results:
+            for video in search_results[:3]:
+                if video.get('tags'):
+                    competitor_keywords.extend(video['tags'][:5])
+        
+        # Combine all keywords
+        all_keywords = list(set(primary + secondary + trending + competitor_keywords))
+        return all_keywords[:30]
+    
+    @staticmethod
+    def generate_viral_hashtags(topic, keywords):
+        """Generate 20-25 viral hashtags (fast, no API call)"""
+        base_hashtags = [
+            "#viral", "#trending", "#fyp", "#foryou", "#youtube",
+            "#shorts", "#viralvideo", "#trendingnow", "#2026", "#new"
+        ]
+        
+        topic_clean = topic.replace(' ', '')
+        topic_hashtags = [
+            f"#{topic_clean}Viral", f"#{topic_clean}Trending",
+            f"#Viral{topic_clean}", f"#Trending{topic_clean}", f"#{topic_clean}2026"
+        ]
+        
+        engagement_hashtags = [
+            "#Subscribe", "#LikeAndShare", "#CommentBelow",
+            "#NotificationSquad", "#MustWatch", "#Recommended"
+        ]
+        
+        # Add keyword-based hashtags
+        keyword_hashtags = [f"#{kw.replace(' ', '')}" for kw in keywords[:8] if len(kw) > 2]
+        
+        all_hashtags = base_hashtags + topic_hashtags + engagement_hashtags + keyword_hashtags
+        return list(set(all_hashtags))[:25]
+    
+    @staticmethod
+    def get_optimal_posting_time():
+        """Get optimal posting time for virality"""
+        best_times = {
+            "weekday": {"best": "2:00 PM - 4:00 PM", "good": "12:00 PM - 6:00 PM"},
+            "weekend": {"best": "9:00 AM - 11:00 AM", "good": "8:00 AM - 12:00 PM"}
+        }
+        
+        current_day = datetime.now().strftime("%A")
+        is_weekend = current_day in ["Saturday", "Sunday"]
+        return best_times["weekend"] if is_weekend else best_times["weekday"]
+    
+    @staticmethod
+    def generate_engagement_strategy(topic):
+        """Generate engagement strategy for viral growth"""
+        return {
+            "pin_comment": f"What's your favorite part about {topic}? Comment below! 👇",
+            "cta_1": "Subscribe NOW and turn on notifications! 🔔",
+            "cta_2": "Like this video if you found it helpful! 👍",
+            "cta_3": "Share with someone who needs to see this! 📤",
+            "engagement_bait": f"Comment 'YES' if you want more {topic} content!",
+            "community_post": f"Poll: What's your biggest challenge with {topic}?",
+            "cross_platform": [
+                f"TikTok: Short clip with hook",
+                f"Instagram Reel: 30-60 second highlight",
+                f"Twitter/X: Thread with key takeaways",
+                f"Facebook: Share with engaging caption"
+            ]
+        }
+    
+    @staticmethod
+    def create_thumbnail_suggestions(topic, content_analysis):
+        """Create thumbnail optimization suggestions"""
+        return {
+            "text_suggestions": [f"OMG! {topic}", f"{topic} SECRETS", "YOU NEED THIS", "MIND = BLOWN"],
+            "color_scheme": "Red/Yellow/Orange on dark background (high contrast)",
+            "elements": ["Surprised facial expression", "Arrow pointing to key element", "Large numbers (3, 5, 7)"],
+            "font_style": "Bold, sans-serif, ALL CAPS",
+            "background": "Bright gradient or high-contrast solid color"
+        }
+
+
+class ViralMetricsTracker:
+    """Track and optimize for viral metrics"""
+    
+    VIRAL_TARGETS = {
+        "ctr": 10.0, "retention_30s": 50.0, "retention_50": 40.0,
+        "engagement_rate": 5.0, "subscriber_conversion": 1.0, "share_rate": 2.0,
+    }
+    
+    @staticmethod
+    def get_viral_checklist():
+        return [
+            "✓ Title has power word + number + emotional trigger",
+            "✓ Description hook in first 60 characters",
+            "✓ 20-25 viral hashtags included",
+            "✓ 30+ SEO keywords in description",
+            "✓ Thumbnail has high contrast + face + text",
+        ]
