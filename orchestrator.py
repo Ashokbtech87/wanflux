@@ -10,7 +10,8 @@ from typing import List, Dict
 
 # Use 127.0.0.1 to avoid IPv6/proxy loops on Colab/Windows
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL_NAME = "kimi-k2.5:cloud"  # The model you specified
+global MODEL_NAME
+MODEL_NAME = "gemma4:latest"  # Default fallback
 API_KEY = "c7f2a3121a9b4d288665f10ff688c161.TQQr5XBuPLTNCWa1Y7NyZ8aa"
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
@@ -288,10 +289,16 @@ def step8_stitch_videos(segment_count: int):
         print("[!] FFmpeg stitch encountered an issue (missing files likely if dry-run).")
 
 def main():
+    global MODEL_NAME
     print("=============================================")
     print("  AI Video Pipeline Orchestrator (Dry-Run)")
     print("=============================================")
     
+    # Allow autonomous model selection
+    user_model = input("Enter Ollama model name [default: gemma4:latest]: ").strip()
+    if user_model:
+        MODEL_NAME = user_model
+        
     input_type = input("Do you want to provide a [1] Topic/Niche or [2] Full Story? (1/2) [default: 1]: ").strip()
     
     if input_type == '2':
