@@ -23,12 +23,12 @@ def invoke_wgp(zip_path: str, stage_name: str):
     
     try:
         # Run wgp.py exclusively from within its directory so its dependencies resolve
+        # We REMOVED stdout/stderr PIPING so that Colab natively displays GPU progress bars 
+        # and any (y/n) questions directly to the user!
         result = subprocess.run(
             ["python", "wgp.py", "--process", abs_zip_path], 
             cwd=WAN2FLUX_DIR,
-            check=False, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE
+            check=False
         )
         if result.returncode == 0:
             print(f"[OK] Completed {stage_name} successfully!")
